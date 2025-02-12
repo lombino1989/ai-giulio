@@ -1,121 +1,131 @@
-// Configuration for Stability AI
-const config = {
-    apiKey: 'sk-1Yw27y4YsUVbqFtDTRVlQmeH6jkXdbBLz1Y6wxUSZoefy1bd',
-    apiEndpoint: 'https://api.stability.ai/v1/generation/stable-diffusion-v1-5/text-to-image',
-};
+// Configurazione API Stability
+const STABILITY_API_KEY = 'sk-1Yw27y4YsUVbqFtDTRVlQmeH6jkXdbBLz1Y6wxUSZoefy1bd';
+const API_HOST = 'https://api.stability.ai';
 
-// DOM Elements
+// Elementi DOM
 const elements = {
     promptInput: document.getElementById('promptInput'),
-    stylePreset: document.getElementById('stylePreset'),
     generateBtn: document.getElementById('generateBtn'),
-    loadingOverlay: document.getElementById('loadingOverlay'),
     resultsGallery: document.getElementById('resultsGallery'),
+    loadingOverlay: document.getElementById('loadingOverlay'),
+    artType: document.getElementById('artType')
 };
 
-// State management
-let isGenerating = false;
+// Configurazione generazione immagini
+const config = {
+    portrait: {
+        width: 1024,
+        height: 1536
+    },
+    landscape: {
+        width: 1536,
+        height: 1024
+    }
+};
 
 // Event Listeners
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('App initialized');
-    elements.generateBtn.addEventListener('click', handleGeneration);
-});
+elements.generateBtn.addEventListener('click', handleGenerate);
 
-async function handleGeneration() {
-    if (isGenerating) return;
+// Gestione generazione arte
+async function handleGenerate() {
+    if (!validateInput()) return;
     
-    const prompt = elements.promptInput.value.trim();
-    if (!prompt) {
-        alert('Per favore, inserisci una descrizione per la tua arte.');
-        return;
-    }
-
     try {
-        isGenerating = true;
-        elements.loadingOverlay.classList.remove('hidden');
-        elements.generateBtn.disabled = true;
+        showLoading();
+        const imageData = await generateImage();
+        displayResults(imageData.artifacts);
+    } catch (error) {
+        handleError(error);
+    } finally {
+        hideLoading();
+    }
+}
 
-        const response = await fetch(config.apiEndpoint, {
+// Validazione input
+function validateInput() {
+    if (!elements.promptInput.value.trim()) {
+        alert('Per favore, inserisci una descrizione per l\'immagine');
+        return false;
+    }
+    return true;
+}
+
+// Generazione immagine
+async function generateImage() {
+    const dimensions = getDimensions();
+    
+    const response = await fetch(
+        `${API_HOST}/v1/generation/stable-diffusion-xl-turbo/text-to-image`,
+        {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${config.apiKey}`,
+                Accept: 'application/json',
+                Authorization: `Bearer ${STABILITY_API_KEY}`,
             },
             body: JSON.stringify({
-                text_prompts: [{
-                    text: prompt
-                }],
-                cfg_scale: 7,
-                clip_guidance_preset: 'FAST_BLUE',
-                height: 512,
-                width: 512,
+                text_prompts: [
+                    {
+                        text: elements.promptInput.value,
+                        weight: 1,
+                    }
+                ],
+                cfg_scale: 7.5,
+                height: dimensions.height,
+                width: dimensions.width,
+                steps: 50,
                 samples: 1,
-                steps: 30
-            })
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Errore durante la generazione');
+                style_preset: "enhance",
+                image_strength: 0.9,
+            }),
         }
+    );
 
-        const result = await response.json();
-        console.log('API Response:', result);
-
-        if (result.artifacts && result.artifacts.length > 0) {
-            const imageContainer = document.createElement('div');
-            imageContainer.className = 'image-container';
-
-            const img = document.createElement('img');
-            img.src = `data:image/png;base64,${result.artifacts[0].base64}`;
-            img.alt = 'Generated artwork';
-            img.className = 'result-image';
-
-            imageContainer.appendChild(img);
-            elements.resultsGallery.innerHTML = '';
-            elements.resultsGallery.appendChild(imageContainer);
-
-            // Add download button
-            const downloadBtn = document.createElement('button');
-            downloadBtn.textContent = 'Scarica Immagine';
-            downloadBtn.className = 'download-btn';
-            downloadBtn.onclick = () => downloadImage(img.src);
-            imageContainer.appendChild(downloadBtn);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert(error.message || 'Si è verificato un errore durante la generazione dell\'immagine');
-    } finally {
-        isGenerating = false;
-        elements.loadingOverlay.classList.add('hidden');
-        elements.generateBtn.disabled = false;
+    if (!response.ok) {
+        throw new Error(`Errore HTTP: ${response.status}`);
     }
+
+    return response.json();
 }
 
-function downloadImage(dataUrl) {
-    const link = document.createElement('a');
-    link.href = dataUrl;
-    link.download = `ai-artwork-${Date.now()}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+// Ottieni dimensioni in base al tipo selezionato
+function getDimensions() {
+    return config[elements.artType.value];
 }
 
-// Add some example prompts
-const examplePrompts = [
-    "un tramonto sulla spiaggia",
-    "un gatto che dorme su un cuscino",
-    "un paesaggio di montagna",
-    "un ritratto in stile rinascimentale"
-];
-
-// Update placeholder with random prompt
-function updatePlaceholder() {
-    const randomPrompt = examplePrompts[Math.floor(Math.random() * examplePrompts.length)];
-    elements.promptInput.placeholder = `Esempio: ${randomPrompt}`;
+// Visualizza risultati
+function displayResults(artifacts) {
+    artifacts.forEach(image => {
+        const container = createImageContainer(image);
+        elements.resultsGallery.insertBefore(container, elements.resultsGallery.firstChild);
+    });
 }
 
-updatePlaceholder();
-setInterval(updatePlaceholder, 5000);
+// Crea container immagine
+function createImageContainer(image) {
+    const container = document.createElement('div');
+    container.className = 'image-container';
+
+    const img = document.createElement('img');
+    img.src = `data:image/png;base64,${image.base64}`;
+    img.alt = 'Arte Generata';
+    img.className = 'generated-image';
+
+    container.appendChild(img);
+    return container;
+}
+
+// Gestione errori
+function handleError(error) {
+    console.error('Errore:', error);
+    alert('Si è verificato un errore durante la generazione dell\'immagine. Per favore riprova.');
+}
+
+// Gestione loading
+function showLoading() {
+    elements.loadingOverlay.classList.remove('hidden');
+}
+
+function hideLoading() {
+    elements.loadingOverlay.classList.add('hidden');
+}

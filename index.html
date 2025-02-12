@@ -3,81 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://api.stability.ai; img-src 'self' data: blob:; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com">
-    <title>AI Art Studio</title>
+    <title>AI Art Generator</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>AI Art Studio</h1>
-            <p>Trasforma le tue idee in arte con l'intelligenza artificiale</p>
+            <h1>AI Art Generator</h1>
+            <p>Crea arte con l'intelligenza artificiale</p>
         </header>
 
         <main>
-            <div class="art-generator">
-                <div class="prompt-section">
-                    <div class="input-group">
-                        <textarea 
-                            id="promptInput" 
-                            placeholder="Descrivi la tua idea... (es: 'un paesaggio surreale con montagne fluttuanti e aurore boreali')"
-                        ></textarea>
-                        <div class="controls">
-                            <select id="stylePreset">
-                                <option value="enhance">Enhance</option>
-                                <option value="anime">Anime</option>
-                                <option value="photographic">Photographic</option>
-                                <option value="digital-art">Digital Art</option>
-                                <option value="comic-book">Comic Book</option>
-                                <option value="fantasy-art">Fantasy Art</option>
-                                <option value="line-art">Line Art</option>
-                                <option value="analog-film">Analog Film</option>
-                                <option value="neon-punk">Neon Punk</option>
-                                <option value="isometric">Isometric</option>
-                                <option value="low-poly">Low Poly</option>
-                                <option value="origami">Origami</option>
-                                <option value="modeling-compound">Modeling Compound</option>
-                                <option value="cinematic">Cinematic</option>
-                                <option value="3d-model">3D Model</option>
-                                <option value="pixel-art">Pixel Art</option>
-                                <option value="tile-texture">Tile Texture</option>
-                            </select>
-                            <select id="aspectRatio">
-                                <option value="1:1">Quadrato 1:1</option>
-                                <option value="3:4">Ritratto 3:4</option>
-                                <option value="4:3">Paesaggio 4:3</option>
-                            </select>
-                        </div>
-                        <button id="generateBtn" class="primary-button">
-                            <i class="ph ph-magic-wand"></i>
-                            Genera Arte
-                        </button>
-                    </div>
+            <div class="generator-section">
+                <div class="input-container">
+                    <!-- Selezione tipo di arte -->
+                    <select id="artType" class="art-type-select">
+                        <option value="portrait">Ritratto</option>
+                        <option value="landscape">Paesaggio</option>
+                    </select>
+
+                    <!-- Input per la descrizione -->
+                    <textarea 
+                        id="promptInput" 
+                        placeholder="Descrivi l'immagine che vuoi generare..."
+                        class="prompt-input"
+                    ></textarea>
+
+                    <!-- Pulsante genera -->
+                    <button id="generateBtn" class="primary-button">
+                        Genera Arte
+                    </button>
                 </div>
 
-                <div class="gallery-section">
-                    <div class="loading-indicator hidden">
-                        <div class="spinner"></div>
-                        <p>Creando la tua arte...</p>
-                    </div>
-                    <div id="resultsGallery" class="results-grid"></div>
-                </div>
+                <!-- Galleria risultati -->
+                <div id="resultsGallery" class="results-grid"></div>
             </div>
         </main>
 
+        <!-- Footer -->
         <footer>
-            <p>Creato con ❤️ da AI Art Studio</p>
+            <p>Powered by Stability AI</p>
         </footer>
     </div>
+
+    <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay hidden">
         <div class="loading-content">
             <div class="loading-spinner"></div>
-            <p>Generazione dell'immagine in corso...</p>
-            <p>Attendere prego...</p>
+            <p>Generazione in corso...</p>
         </div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>

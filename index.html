@@ -1,22 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mediterranean Art Generator</title>
+    <title>Generatore Immagini Stile Mediterraneo</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>Mediterranean Art Generator</h1>
-        <div class="input-section">
-            <textarea id="promptInput" placeholder="Describe the Mediterranean scene you want to generate..."></textarea>
-            <button id="generateBtn">Generate Art</button>
-        </div>
-        <div class="result-section">
-            <div id="loadingIndicator" style="display: none;">Generating your artwork...</div>
-            <img id="resultImage" style="display: none;">
-        </div>
+        <h1>Generatore Immagini Stile Mediterraneo</h1>
+        <textarea id="promptInput" placeholder="Descrivi l'immagine che vuoi generare..."></textarea>
+        <button id="generateBtn">Genera Immagine</button>
+        <div id="loadingOverlay" class="hidden">Generazione in corso...</div>
+        <div id="resultsGallery"></div>
     </div>
     <script src="script.js"></script>
 </body>

@@ -1,13 +1,12 @@
 // Configurazione API
 const API_KEY = 'sk-1Yw27y4YsUVbqFtDTRVlQmeH6jkXdbBLz1Y6wxUSZoefy1bd';
-const API_URL = 'https://api.stability.ai/v1/generation/stable-diffusion-v1-6/text-to-image';
+const API_URL = 'https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image';
 
 // Elementi DOM
 const promptInput = document.getElementById('promptInput');
 const generateBtn = document.getElementById('generateBtn');
 const resultsGallery = document.getElementById('resultsGallery');
 const loadingOverlay = document.getElementById('loadingOverlay');
-const artType = document.getElementById('artType');
 
 // Event Listener
 generateBtn.addEventListener('click', async () => {
@@ -19,34 +18,20 @@ generateBtn.addEventListener('click', async () => {
     }
 
     try {
-        // Mostra loading
         loadingOverlay.classList.remove('hidden');
-
-        // Imposta dimensioni
-        const dimensions = artType.value === 'portrait' 
-            ? { width: 768, height: 1024 }
-            : { width: 1024, height: 768 };
-
-        // Aggiungi stile anime al prompt
-        const animePrompt = `${prompt}, anime style, manga style, detailed anime illustration, high quality anime art, Studio Ghibli style, vibrant colors`;
-
-        // Prepara i dati per la richiesta
+        
         const requestData = {
-            text_prompts: [
-                { text: animePrompt, weight: 1 },
-                { text: "western style, photorealistic, 3d rendering", weight: -1 }
-            ],
+            text_prompts: [{
+                text: `${prompt}, Mediterranean oil painting style, vintage Italian postcard, coastal scene, vibrant colors, detailed brushstrokes, artistic composition`,
+                weight: 1
+            }],
             cfg_scale: 7,
-            height: dimensions.height,
-            width: dimensions.width,
-            steps: 30,
+            height: 1024,
+            width: 1024,
             samples: 1,
-            style_preset: "anime"
+            steps: 40
         };
 
-        console.log('Invio richiesta:', requestData);
-
-        // Chiamata API
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
@@ -59,92 +44,39 @@ generateBtn.addEventListener('click', async () => {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(`Errore API: ${response.status} - ${errorData.message || 'Errore sconosciuto'}`);
+            throw new Error(`Errore API: ${errorData.message || response.statusText}`);
         }
 
         const result = await response.json();
         
-        if (result.artifacts && result.artifacts.length > 0) {
-            // Crea elemento immagine e container
-            const container = document.createElement('div');
-            container.className = 'image-container';
-
-            const imgWrapper = document.createElement('div');
-            imgWrapper.className = 'image-wrapper';
-
-            const img = document.createElement('img');
-            img.src = `data:image/png;base64,${result.artifacts[0].base64}`;
-            img.className = 'generated-image';
-            img.alt = 'Immagine Generata';
-
-            // Aggiungi pulsante download
-            const downloadBtn = document.createElement('button');
-            downloadBtn.className = 'download-button';
-            downloadBtn.innerHTML = '⬇️ Scarica';
-            downloadBtn.onclick = () => downloadImage(result.artifacts[0].base64, 'anime_art.png');
-
-            imgWrapper.appendChild(img);
-            container.appendChild(imgWrapper);
-            container.appendChild(downloadBtn);
-            resultsGallery.insertBefore(container, resultsGallery.firstChild);
+        if (!result.artifacts || result.artifacts.length === 0) {
+            throw new Error('Nessuna immagine generata');
         }
+
+        const imageContainer = document.createElement('div');
+        imageContainer.className = 'image-container';
+        
+        const img = document.createElement('img');
+        img.src = `data:image/png;base64,${result.artifacts[0].base64}`;
+        img.alt = prompt;
+        
+        const downloadBtn = document.createElement('button');
+        downloadBtn.textContent = 'Scarica';
+        downloadBtn.onclick = () => {
+            const link = document.createElement('a');
+            link.href = img.src;
+            link.download = 'immagine-generata.png';
+            link.click();
+        };
+        
+        imageContainer.appendChild(img);
+        imageContainer.appendChild(downloadBtn);
+        resultsGallery.insertBefore(imageContainer, resultsGallery.firstChild);
 
     } catch (error) {
         console.error('Errore:', error);
-        alert(`Errore durante la generazione dell'immagine: ${error.message}`);
+        alert(`Errore durante la generazione: ${error.message}`);
     } finally {
         loadingOverlay.classList.add('hidden');
     }
 });
-
-// Funzione per scaricare l'immagine
-function downloadImage(base64Data, fileName) {
-    const link = document.createElement('a');
-    link.href = `data:image/png;base64,${base64Data}`;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-// Funzione per generare immagine con Stability AI
-async function generateImage(prompt) {
-    const engineId = 'stable-diffusion-xl-1024-v1-0';
-    const apiHost = 'https://api.stability.ai';
-    const apiKey = 'YOUR-API-KEY'; // Replace with your actual API key
-
-    try {
-        const response = await fetch(`${apiHost}/v1/generation/${engineId}/text-to-image`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
-                text_prompts: [
-                    {
-                        text: prompt + ", oil painting, Mediterranean postcard style, vibrant colors, detailed, artistic",
-                        weight: 1
-                    }
-                ],
-                cfg_scale: 7,
-                height: 1024,
-                width: 1024,
-                samples: 1,
-                steps: 50,
-                style_preset: "cinematic"
-            }),
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        return result.artifacts[0].base64;
-    } catch (error) {
-        console.error('Error generating image:', error);
-        throw error;
-    }
-}

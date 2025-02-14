@@ -36,7 +36,6 @@ function resizeCanvases() {
         canvas.height = height;
     });
     
-    // Ridisegna l'immagine se presente
     if (currentImage) {
         drawImage(currentImage);
     }

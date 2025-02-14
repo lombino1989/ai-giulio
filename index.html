@@ -3,17 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generatore Immagini Stile Mediterraneo</title>
+    <title>Editor Immagini AI</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>Generatore Immagini Stile Mediterraneo</h1>
-        <textarea id="promptInput" placeholder="Descrivi l'immagine che vuoi generare..."></textarea>
-        <button id="generateBtn">Genera Immagine</button>
+        <h1>Editor Immagini AI</h1>
+        
+        <div class="toolbar">
+            <input type="file" id="imageInput" accept="image/*">
+            <button id="lassoTool" class="tool-btn">Strumento Lazo</button>
+            <button id="clearSelection" class="tool-btn">Cancella Selezione</button>
+        </div>
+        
+        <div class="workspace">
+            <div class="canvas-container">
+                <canvas id="imageCanvas"></canvas>
+                <canvas id="selectionCanvas"></canvas>
+            </div>
+            
+            <div class="controls">
+                <textarea id="promptInput" placeholder="Descrivi come vuoi modificare l'area selezionata..."></textarea>
+                <button id="generateBtn" disabled>Genera con AI</button>
+            </div>
+        </div>
+        
         <div id="loadingOverlay" class="hidden">Generazione in corso...</div>
-        <div id="resultsGallery"></div>
+        <div id="resultsGallery" class="results-gallery"></div>
     </div>
+    
     <script src="script.js"></script>
 </body>
 </html>

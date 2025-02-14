@@ -1,59 +1,23 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Art Generator</title>
+    <title>Mediterranean Art Generator</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>AI Art Generator</h1>
-            <p>Crea arte con l'intelligenza artificiale</p>
-        </header>
-
-        <main>
-            <div class="generator-section">
-                <div class="input-container">
-                    <!-- Selezione tipo di arte -->
-                    <select id="artType" class="art-type-select">
-                        <option value="portrait">Ritratto</option>
-                        <option value="landscape">Paesaggio</option>
-                    </select>
-
-                    <!-- Input per la descrizione -->
-                    <textarea 
-                        id="promptInput" 
-                        placeholder="Descrivi l'immagine che vuoi generare..."
-                        class="prompt-input"
-                    ></textarea>
-
-                    <!-- Pulsante genera -->
-                    <button id="generateBtn" class="primary-button">
-                        Genera Arte
-                    </button>
-                </div>
-
-                <!-- Galleria risultati -->
-                <div id="resultsGallery" class="results-grid"></div>
-            </div>
-        </main>
-
-        <!-- Footer -->
-        <footer>
-            <p>Powered by Stability AI</p>
-        </footer>
-    </div>
-
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="loading-overlay hidden">
-        <div class="loading-content">
-            <div class="loading-spinner"></div>
-            <p>Generazione in corso...</p>
+        <h1>Mediterranean Art Generator</h1>
+        <div class="input-section">
+            <textarea id="promptInput" placeholder="Describe the Mediterranean scene you want to generate..."></textarea>
+            <button id="generateBtn">Generate Art</button>
+        </div>
+        <div class="result-section">
+            <div id="loadingIndicator" style="display: none;">Generating your artwork...</div>
+            <img id="resultImage" style="display: none;">
         </div>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>

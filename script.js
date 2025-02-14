@@ -106,3 +106,45 @@ function downloadImage(base64Data, fileName) {
     link.click();
     document.body.removeChild(link);
 }
+
+// Funzione per generare immagine con Stability AI
+async function generateImage(prompt) {
+    const engineId = 'stable-diffusion-xl-1024-v1-0';
+    const apiHost = 'https://api.stability.ai';
+    const apiKey = 'YOUR-API-KEY'; // Replace with your actual API key
+
+    try {
+        const response = await fetch(`${apiHost}/v1/generation/${engineId}/text-to-image`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+                text_prompts: [
+                    {
+                        text: prompt + ", oil painting, Mediterranean postcard style, vibrant colors, detailed, artistic",
+                        weight: 1
+                    }
+                ],
+                cfg_scale: 7,
+                height: 1024,
+                width: 1024,
+                samples: 1,
+                steps: 50,
+                style_preset: "cinematic"
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        return result.artifacts[0].base64;
+    } catch (error) {
+        console.error('Error generating image:', error);
+        throw error;
+    }
+}

@@ -7,7 +7,123 @@ let currentImage = null;
 
 // Configurazione API
 const API_KEY = 'sk-1Yw27y4YsUVbqFtDTRVlQmeH6jkXdbBLz1Y6wxUSZoefy1bd';
-const API_ENDPOINT = 'https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/image-to-image';
+const API_ENDPOINT = 'https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image';
+
+// Stili predefiniti per ogni categoria
+const styles = {
+    coastal: {
+        prompt: "dipinto impressionista di costa mediterranea, grande fico d'india in primo piano con frutti maturi, mare azzurro cristallino, cielo al tramonto con nuvole rosa e viola, casa in pietra sulla scogliera, stile pittorico dettagliato con pennellate evidenti, olio su tela",
+        negative: "fotografia, bassa qualità, sfocato, arte digitale"
+    },
+    countryside: {
+        prompt: "dipinto di campagna mediterranea, ulivi secolari contorti in primo piano, muretti a secco antichi, campo di grano dorato, fiori di campo colorati, casetta tradizionale con tetto in tegole sullo sfondo, cielo azzurro con nuvole bianche, stile pittorico con texture pronunciata",
+        negative: "fotografia, bassa qualità, sfocato, arte digitale"
+    },
+    harbor: {
+        prompt: "dipinto di porto mediterraneo, faro bianco sulla scogliera, barca tradizionale colorata in primo piano, bouganville in fiore su un vecchio arco in pietra, mare turchese calmo, cielo al tramonto con nuvole colorate, stile pittorico mediterraneo dettagliato",
+        negative: "fotografia, bassa qualità, sfocato, arte digitale"
+    },
+    village: {
+        prompt: "dipinto di borgo mediterraneo antico, stradina con scalini in pietra, archi antichi con bouganville, fichi d'india sui muretti, vista sul mare in lontananza, cielo azzurro con nuvole soffici, stile pittorico impressionista dettagliato",
+        negative: "fotografia, bassa qualità, sfocato, arte digitale"
+    }
+};
+
+// Elementi DOM
+const generateBtn = document.getElementById('generateBtn');
+const styleSelect = document.getElementById('styleSelect');
+const imageContainer = document.getElementById('imageContainer');
+const imageHistory = document.getElementById('imageHistory');
+const loadingSpinner = document.getElementById('loadingSpinner');
+
+// Array per memorizzare lo storico delle immagini
+let generatedImages = [];
+
+// Funzione per generare un'immagine
+async function generateImage() {
+    try {
+        loadingSpinner.classList.remove('hidden');
+        generateBtn.disabled = true;
+
+        const selectedStyle = styles[styleSelect.value];
+        
+        const response = await fetch(API_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${API_KEY}`
+            },
+            body: JSON.stringify({
+                text_prompts: [
+                    {
+                        text: selectedStyle.prompt,
+                        weight: 1
+                    },
+                    {
+                        text: selectedStyle.negative,
+                        weight: -1
+                    }
+                ],
+                cfg_scale: 8,
+                height: 1024,
+                width: 1024,
+                samples: 1,
+                steps: 50,
+                style_preset: "painterly"
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        const imageData = result.artifacts[0].base64;
+        
+        // Crea e mostra la nuova immagine
+        displayNewImage(imageData);
+        
+        // Aggiungi l'immagine allo storico
+        addToHistory(imageData);
+
+    } catch (error) {
+        console.error('Errore durante la generazione:', error);
+        alert('Errore durante la generazione dell\'immagine. Riprova più tardi.');
+    } finally {
+        loadingSpinner.classList.add('hidden');
+        generateBtn.disabled = false;
+    }
+}
+
+// Funzione per mostrare la nuova immagine
+function displayNewImage(base64Data) {
+    imageContainer.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = `data:image/png;base64,${base64Data}`;
+    imageContainer.appendChild(img);
+}
+
+// Funzione per aggiungere un'immagine allo storico
+function addToHistory(base64Data) {
+    const img = document.createElement('img');
+    img.src = `data:image/png;base64,${base64Data}`;
+    
+    // Aggiungi l'immagine all'inizio dello storico
+    imageHistory.insertBefore(img, imageHistory.firstChild);
+    
+    // Limita il numero di immagini nello storico a 12
+    generatedImages.unshift(base64Data);
+    if (generatedImages.length > 12) {
+        generatedImages.pop();
+        if (imageHistory.lastChild) {
+            imageHistory.removeChild(imageHistory.lastChild);
+        }
+    }
+}
+
+// Event listener per il pulsante di generazione
+generateBtn.addEventListener('click', generateImage);
 
 // Inizializzazione al caricamento della pagina
 document.addEventListener('DOMContentLoaded', () => {
@@ -45,12 +161,10 @@ function setupEventListeners() {
     const imageInput = document.getElementById('imageInput');
     const lassoTool = document.getElementById('lassoTool');
     const clearSelection = document.getElementById('clearSelection');
-    const generateBtn = document.getElementById('generateBtn');
     
     imageInput.addEventListener('change', handleImageUpload);
     lassoTool.addEventListener('click', toggleLassoTool);
     clearSelection.addEventListener('click', clearLassoSelection);
-    generateBtn.addEventListener('click', generateImage);
     
     // Eventi per il disegno del lazo
     selectionCanvas.addEventListener('mousedown', startDrawing);
@@ -139,97 +253,10 @@ function endDrawing() {
         selectionCtx.lineTo(lassoPoints[0].x, lassoPoints[0].y);
         selectionCtx.stroke();
         selectionCtx.closePath();
-        document.getElementById('generateBtn').disabled = false;
     }
 }
 
 function clearLassoSelection() {
     selectionCtx.clearRect(0, 0, selectionCanvas.width, selectionCanvas.height);
     lassoPoints = [];
-    document.getElementById('generateBtn').disabled = true;
-}
-
-async function generateImage() {
-    if (!currentImage || lassoPoints.length < 3) {
-        alert('Seleziona un\'area con il lazo prima di generare');
-        return;
-    }
-    
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    loadingOverlay.classList.remove('hidden');
-    
-    try {
-        // Crea la maschera
-        const maskCanvas = document.createElement('canvas');
-        maskCanvas.width = imageCanvas.width;
-        maskCanvas.height = imageCanvas.height;
-        const maskCtx = maskCanvas.getContext('2d');
-        
-        // Disegna la maschera
-        maskCtx.fillStyle = 'white';
-        maskCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
-        maskCtx.fillStyle = 'black';
-        maskCtx.beginPath();
-        maskCtx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
-        lassoPoints.forEach(point => maskCtx.lineTo(point.x, point.y));
-        maskCtx.closePath();
-        maskCtx.fill();
-        
-        // Prepara i dati per l'API
-        const prompt = document.getElementById('promptInput').value;
-        const imageBlob = await new Promise(resolve => imageCanvas.toBlob(resolve));
-        const maskBlob = await new Promise(resolve => maskCanvas.toBlob(resolve));
-        
-        const formData = new FormData();
-        formData.append('init_image', imageBlob);
-        formData.append('mask_image', maskBlob);
-        formData.append('prompt', prompt);
-        formData.append('mask_source', 'MASK_IMAGE_BLACK');
-        
-        // Chiamata API
-        const response = await fetch(API_ENDPOINT, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${API_KEY}`
-            },
-            body: formData
-        });
-        
-        if (!response.ok) throw new Error('Errore nella generazione dell\'immagine');
-        
-        const result = await response.json();
-        
-        // Mostra il risultato
-        const resultImage = new Image();
-        resultImage.onload = () => {
-            const gallery = document.getElementById('resultsGallery');
-            const container = document.createElement('div');
-            container.className = 'result-container';
-            
-            // Aggiungi l'immagine
-            container.appendChild(resultImage);
-            
-            // Aggiungi il pulsante Applica
-            const applyBtn = document.createElement('button');
-            applyBtn.textContent = 'Applica Modifiche';
-            applyBtn.className = 'apply-btn';
-            applyBtn.onclick = () => {
-                ctx.drawImage(resultImage, 0, 0, imageCanvas.width, imageCanvas.height);
-                currentImage = resultImage;
-                clearLassoSelection();
-                container.remove();
-            };
-            
-            container.appendChild(applyBtn);
-            gallery.insertBefore(container, gallery.firstChild);
-        };
-        
-        resultImage.src = `data:image/png;base64,${result.images[0].base64}`;
-        
-    } catch (error) {
-        console.error('Errore durante la generazione:', error);
-        alert('Errore durante la generazione dell\'immagine');
-    } finally {
-        loadingOverlay.classList.add('hidden');
-    }
 }

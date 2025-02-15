@@ -3,35 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor Immagini AI</title>
+    <title>Generatore Dipinti Mediterranei</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>Editor Immagini AI</h1>
+        <h1>Generatore Dipinti Mediterranei</h1>
         
-        <div class="toolbar">
-            <input type="file" id="imageInput" accept="image/*">
-            <button id="lassoTool" class="tool-btn">Strumento Lazo</button>
-            <button id="clearSelection" class="tool-btn">Cancella Selezione</button>
-        </div>
-        
-        <div class="workspace">
-            <div class="canvas-container">
-                <canvas id="imageCanvas"></canvas>
-                <canvas id="selectionCanvas"></canvas>
-            </div>
-            
-            <div class="controls">
-                <textarea id="promptInput" placeholder="Descrivi come vuoi modificare l'area selezionata..."></textarea>
-                <button id="generateBtn" disabled>Genera con AI</button>
+        <div class="controls">
+            <div class="options">
+                <select id="styleSelect">
+                    <option value="coastal">Costa Mediterranea</option>
+                    <option value="countryside">Campagna con Ulivi</option>
+                    <option value="harbor">Porto con Faro</option>
+                    <option value="village">Borgo Antico</option>
+                </select>
+                <button id="generateBtn" class="primary-btn">Genera Dipinto</button>
             </div>
         </div>
-        
-        <div id="loadingOverlay" class="hidden">Generazione in corso...</div>
-        <div id="resultsGallery" class="results-gallery"></div>
+
+        <div class="gallery">
+            <div id="loadingSpinner" class="spinner hidden">
+                <div class="spinner-inner"></div>
+                <p>Creazione del dipinto in corso...</p>
+            </div>
+            <div id="imageContainer" class="image-container">
+                <!-- Le immagini generate appariranno qui -->
+            </div>
+        </div>
+
+        <div class="history">
+            <h2>Dipinti Generati</h2>
+            <div id="imageHistory" class="history-container">
+                <!-- Lo storico delle immagini apparirà qui -->
+            </div>
+        </div>
     </div>
-    
     <script src="script.js"></script>
 </body>
 </html>

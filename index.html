@@ -11,34 +11,35 @@
         <h1>Generatore Dipinti Mediterranei</h1>
         
         <div class="controls">
-            <div class="options">
-                <select id="styleSelect">
-                    <option value="coastal">Costa Mediterranea</option>
-                    <option value="countryside">Campagna con Ulivi</option>
-                    <option value="harbor">Porto con Faro</option>
-                    <option value="village">Borgo Antico</option>
-                </select>
-                <button id="generateBtn" class="primary-btn">Genera Dipinto</button>
-            </div>
+            <select id="styleSelect">
+                <option value="coastal">Costa Mediterranea</option>
+                <option value="countryside">Campagna con Ulivi</option>
+                <option value="harbor">Porto con Faro</option>
+                <option value="village">Borgo Antico</option>
+            </select>
+            <button id="generateBtn">Genera Dipinto</button>
         </div>
 
-        <div class="gallery">
-            <div id="loadingSpinner" class="spinner hidden">
-                <div class="spinner-inner"></div>
-                <p>Creazione del dipinto in corso...</p>
-            </div>
-            <div id="imageContainer" class="image-container">
-                <!-- Le immagini generate appariranno qui -->
-            </div>
+        <div id="loadingSpinner" class="spinner hidden">
+            <div class="spinner-inner"></div>
+            <p>Creazione del dipinto in corso...</p>
         </div>
 
-        <div class="history">
-            <h2>Dipinti Generati</h2>
-            <div id="imageHistory" class="history-container">
-                <!-- Lo storico delle immagini apparirà qui -->
-            </div>
+        <div id="imageContainer" class="image-container">
+            <!-- Le immagini generate appariranno qui -->
+        </div>
+
+        <div class="download-container hidden" id="downloadContainer">
+            <button id="downloadBtn" class="download-btn">
+                <span class="download-icon">⬇️</span> Scarica Dipinto
+            </button>
+        </div>
+
+        <div id="imageHistory" class="history-container">
+            <!-- Lo storico delle immagini apparirà qui -->
         </div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>

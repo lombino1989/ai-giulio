@@ -9,52 +9,68 @@ let currentImage = null;
 const API_KEY = 'sk-1Yw27y4YsUVbqFtDTRVlQmeH6jkXdbBLz1Y6wxUSZoefy1bd';
 const API_ENDPOINT = 'https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image';
 
-// Stili predefiniti per ogni categoria
-const styles = {
-    coastal: {
-        prompt: "dipinto impressionista di costa mediterranea, grande fico d'india in primo piano con frutti maturi, mare azzurro cristallino, cielo al tramonto con nuvole rosa e viola, casa in pietra sulla scogliera, stile pittorico dettagliato con pennellate evidenti, olio su tela",
-        negative: "fotografia, bassa qualità, sfocato, arte digitale"
-    },
-    countryside: {
-        prompt: "dipinto di campagna mediterranea, ulivi secolari contorti in primo piano, muretti a secco antichi, campo di grano dorato, fiori di campo colorati, casetta tradizionale con tetto in tegole sullo sfondo, cielo azzurro con nuvole bianche, stile pittorico con texture pronunciata",
-        negative: "fotografia, bassa qualità, sfocato, arte digitale"
-    },
-    harbor: {
-        prompt: "dipinto di porto mediterraneo, faro bianco sulla scogliera, barca tradizionale colorata in primo piano, bouganville in fiore su un vecchio arco in pietra, mare turchese calmo, cielo al tramonto con nuvole colorate, stile pittorico mediterraneo dettagliato",
-        negative: "fotografia, bassa qualità, sfocato, arte digitale"
-    },
-    village: {
-        prompt: "dipinto di borgo mediterraneo antico, stradina con scalini in pietra, archi antichi con bouganville, fichi d'india sui muretti, vista sul mare in lontananza, cielo azzurro con nuvole soffici, stile pittorico impressionista dettagliato",
-        negative: "fotografia, bassa qualità, sfocato, arte digitale"
+// Verifica che il DOM sia caricato
+document.addEventListener('DOMContentLoaded', () => {
+    // Elementi DOM
+    const generateBtn = document.getElementById('generateBtn');
+    const styleSelect = document.getElementById('styleSelect');
+    const imageContainer = document.getElementById('imageContainer');
+    const imageHistory = document.getElementById('imageHistory');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const downloadContainer = document.getElementById('downloadContainer');
+
+    // Verifica che tutti gli elementi siano stati trovati
+    if (!generateBtn || !styleSelect || !imageContainer || !imageHistory || !loadingSpinner || !downloadBtn || !downloadContainer) {
+        console.error('Elementi DOM mancanti:', {
+            generateBtn: !!generateBtn,
+            styleSelect: !!styleSelect,
+            imageContainer: !!imageContainer,
+            imageHistory: !!imageHistory,
+            loadingSpinner: !!loadingSpinner,
+            downloadBtn: !!downloadBtn,
+            downloadContainer: !!downloadContainer
+        });
+        return;
     }
-};
 
-// Elementi DOM
-const generateBtn = document.getElementById('generateBtn');
-const styleSelect = document.getElementById('styleSelect');
-const imageContainer = document.getElementById('imageContainer');
-const imageHistory = document.getElementById('imageHistory');
-const loadingSpinner = document.getElementById('loadingSpinner');
+    // Stili predefiniti in inglese
+    const styles = {
+        coastal: {
+            prompt: "impressionist painting of Mediterranean coast, large prickly pear cactus in foreground with ripe fruits, crystal clear blue sea, sunset sky with pink and purple clouds, stone house on cliff, detailed painterly style with visible brushstrokes, oil on canvas, artistic style, Mediterranean landscape",
+            negative: "photography, low quality, blurry, digital art"
+        },
+        countryside: {
+            prompt: "painting of Mediterranean countryside, ancient twisted olive trees in foreground, old stone walls, golden wheat field, colorful wildflowers, traditional house with tile roof in background, blue sky with white clouds, painterly style with pronounced texture, artistic style, Mediterranean landscape",
+            negative: "photography, low quality, blurry, digital art"
+        },
+        harbor: {
+            prompt: "painting of Mediterranean harbor, white lighthouse on rocky cliff, traditional colorful boat in foreground, bougainvillea flowers on old stone arch, calm turquoise sea, sunset sky with colored clouds, detailed Mediterranean painterly style, artistic style, Mediterranean landscape",
+            negative: "photography, low quality, blurry, digital art"
+        },
+        village: {
+            prompt: "painting of ancient Mediterranean village, stone stairway street, old arches with bougainvillea, prickly pear cactus on walls, sea view in distance, blue sky with fluffy clouds, detailed impressionist painterly style, artistic style, Mediterranean landscape",
+            negative: "photography, low quality, blurry, digital art"
+        }
+    };
 
-// Array per memorizzare lo storico delle immagini
-let generatedImages = [];
+    // Array per memorizzare lo storico delle immagini
+    let generatedImages = [];
 
-// Funzione per generare un'immagine
-async function generateImage() {
-    try {
-        loadingSpinner.classList.remove('hidden');
-        generateBtn.disabled = true;
+    let currentImageData = null;
 
-        const selectedStyle = styles[styleSelect.value];
-        
-        const response = await fetch(API_ENDPOINT, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${API_KEY}`
-            },
-            body: JSON.stringify({
+    // Funzione per generare un'immagine
+    async function generateImage() {
+        try {
+            console.log('Inizio generazione immagine...');
+            loadingSpinner.classList.remove('hidden');
+            generateBtn.disabled = true;
+            downloadContainer.classList.add('hidden');
+
+            const selectedStyle = styles[styleSelect.value];
+            console.log('Stile selezionato:', styleSelect.value);
+            
+            const requestBody = {
                 text_prompts: [
                     {
                         text: selectedStyle.prompt,
@@ -69,64 +85,91 @@ async function generateImage() {
                 height: 1024,
                 width: 1024,
                 samples: 1,
-                steps: 50,
-                style_preset: "painterly"
-            })
-        });
+                steps: 50
+            };
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+            console.log('Request body:', JSON.stringify(requestBody, null, 2));
 
-        const result = await response.json();
-        const imageData = result.artifacts[0].base64;
-        
-        // Crea e mostra la nuova immagine
-        displayNewImage(imageData);
-        
-        // Aggiungi l'immagine allo storico
-        addToHistory(imageData);
+            const response = await fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${API_KEY}`
+                },
+                body: JSON.stringify(requestBody)
+            });
 
-    } catch (error) {
-        console.error('Errore durante la generazione:', error);
-        alert('Errore durante la generazione dell\'immagine. Riprova più tardi.');
-    } finally {
-        loadingSpinner.classList.add('hidden');
-        generateBtn.disabled = false;
-    }
-}
+            console.log('Status risposta:', response.status);
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Errore API: ${response.status} - ${errorText}`);
+            }
 
-// Funzione per mostrare la nuova immagine
-function displayNewImage(base64Data) {
-    imageContainer.innerHTML = '';
-    const img = document.createElement('img');
-    img.src = `data:image/png;base64,${base64Data}`;
-    imageContainer.appendChild(img);
-}
+            const result = await response.json();
+            if (!result.artifacts || !result.artifacts[0] || !result.artifacts[0].base64) {
+                throw new Error('Formato risposta API non valido');
+            }
 
-// Funzione per aggiungere un'immagine allo storico
-function addToHistory(base64Data) {
-    const img = document.createElement('img');
-    img.src = `data:image/png;base64,${base64Data}`;
-    
-    // Aggiungi l'immagine all'inizio dello storico
-    imageHistory.insertBefore(img, imageHistory.firstChild);
-    
-    // Limita il numero di immagini nello storico a 12
-    generatedImages.unshift(base64Data);
-    if (generatedImages.length > 12) {
-        generatedImages.pop();
-        if (imageHistory.lastChild) {
-            imageHistory.removeChild(imageHistory.lastChild);
+            currentImageData = result.artifacts[0].base64;
+            
+            // Mostra l'immagine generata
+            displayNewImage(currentImageData);
+            addToHistory(currentImageData);
+            downloadContainer.classList.remove('hidden');
+
+        } catch (error) {
+            console.error('Errore dettagliato:', error);
+            alert(`Errore durante la generazione dell'immagine: ${error.message}`);
+        } finally {
+            loadingSpinner.classList.add('hidden');
+            generateBtn.disabled = false;
         }
     }
-}
 
-// Event listener per il pulsante di generazione
-generateBtn.addEventListener('click', generateImage);
+    // Funzione per mostrare la nuova immagine
+    function displayNewImage(base64Data) {
+        console.log('Mostro nuova immagine...');
+        imageContainer.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = `data:image/png;base64,${base64Data}`;
+        imageContainer.appendChild(img);
+    }
 
-// Inizializzazione al caricamento della pagina
-document.addEventListener('DOMContentLoaded', () => {
+    // Funzione per aggiungere un'immagine allo storico
+    function addToHistory(base64Data) {
+        console.log('Aggiungo immagine allo storico...');
+        const img = document.createElement('img');
+        img.src = `data:image/png;base64,${base64Data}`;
+        imageHistory.insertBefore(img, imageHistory.firstChild);
+        
+        // Aggiungi l'immagine all'inizio dello storico
+        generatedImages.unshift(base64Data);
+        if (generatedImages.length > 12) {
+            generatedImages.pop();
+            if (imageHistory.lastChild) {
+                imageHistory.removeChild(imageHistory.lastChild);
+            }
+        }
+    }
+
+    function downloadImage() {
+        if (!currentImageData) return;
+
+        const link = document.createElement('a');
+        link.href = `data:image/png;base64,${currentImageData}`;
+        link.download = `dipinto-mediterraneo-${new Date().getTime()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // Event listener per il pulsante di generazione
+    generateBtn.addEventListener('click', generateImage);
+    downloadBtn.addEventListener('click', downloadImage);
+    console.log('Event listener aggiunto al pulsante genera');
+
+    // Inizializzazione al caricamento della pagina
     setupCanvases();
     setupEventListeners();
 });

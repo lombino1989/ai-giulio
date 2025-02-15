@@ -1,45 +1,13 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generatore Dipinti Mediterranei</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <div class="container">
-        <h1>Generatore Dipinti Mediterranei</h1>
-        
-        <div class="controls">
-            <select id="styleSelect">
-                <option value="coastal">Costa Mediterranea</option>
-                <option value="countryside">Campagna con Ulivi</option>
-                <option value="harbor">Porto con Faro</option>
-                <option value="village">Borgo Antico</option>
-            </select>
-            <button id="generateBtn">Genera Dipinto</button>
-        </div>
-
-        <div id="loadingSpinner" class="spinner hidden">
-            <div class="spinner-inner"></div>
-            <p>Creazione del dipinto in corso...</p>
-        </div>
-
-        <div id="imageContainer" class="image-container">
-            <!-- Le immagini generate appariranno qui -->
-        </div>
-
-        <div class="download-container hidden" id="downloadContainer">
-            <button id="downloadBtn" class="download-btn">
-                <span class="download-icon">⬇️</span> Scarica Dipinto
-            </button>
-        </div>
-
-        <div id="imageHistory" class="history-container">
-            <!-- Lo storico delle immagini apparirà qui -->
-        </div>
-    </div>
-
-    <script src="script.js"></script>
-</body>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + React + TS</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

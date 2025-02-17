@@ -1,197 +1,191 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stability AI Image Generator</title>
+    <title>Generatore di Acquerelli AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Arial', sans-serif;
-        }
-
         body {
-            background-color: #f5f5f5;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        h1 {
+            background: #f5f5f5;
             color: #333;
-            text-align: center;
-            margin-bottom: 20px;
+            min-height: 100vh;
         }
-
-        .input-section {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        input[type="text"] {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-
-        button {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
         .image-container {
-            position: relative;
-            width: 100%;
-            padding-bottom: 100%;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-
-        .image-container img {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 5px;
+        #generatedImage {
+            max-width: 100%;
+            height: auto;
+            display: none;
         }
-
+        .btn-generate {
+            background: #2a9d8f;
+            border: none;
+            padding: 12px 30px;
+            font-weight: bold;
+            color: white;
+        }
+        .btn-generate:hover {
+            background: #264653;
+            transform: translateY(-2px);
+        }
         .loading {
-            text-align: center;
-            margin: 20px 0;
             display: none;
         }
-
-        .error {
-            color: red;
-            margin: 10px 0;
-            display: none;
+        .loading.active {
+            display: block;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Stability AI Image Generator</h1>
+    <div class="container py-5">
+        <header class="text-center mb-5">
+            <h1 class="display-4 fw-bold">Generatore di Acquerelli AI</h1>
+            <p class="lead">Crea paesaggi unici in stile acquerello con l'intelligenza artificiale</p>
+        </header>
 
-        <div class="input-section">
-            <input type="text" id="prompt" placeholder="Enter your image prompt here">
-            <button id="generate">Generate</button>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="image-container mb-4">
+                    <img id="generatedImage" alt="Acquerello generato">
+                    <div class="loading" id="loadingSpinner">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Caricamento...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-generate" id="generateBtn" onclick="generateImage()">
+                        Genera Nuovo Acquerello
+                    </button>
+                    <button class="btn btn-outline-secondary" id="downloadBtn" onclick="downloadImage()" style="display: none;">
+                        Scarica Immagine
+                    </button>
+                </div>
+            </div>
         </div>
-
-        <div class="error" id="error"></div>
-        <div class="loading" id="loading">Generating image...</div>
-        
-        <div class="gallery" id="gallery"></div>
     </div>
 
     <script>
-        const promptInput = document.getElementById('prompt');
-        const generateBtn = document.getElementById('generate');
-        const gallery = document.getElementById('gallery');
-        const loading = document.getElementById('loading');
-        const error = document.getElementById('error');
-
-        // API key stored in code
-        const apiKey = 'sk-1Yw27y4YsUVbqFtDTRVlQmeH6jkXdbBLz1Y6wxUSZoefy1bd';
-
-        generateBtn.addEventListener('click', generateImage);
-
+        const API_KEY = 'sk-1Yw27y4YsUVbqFtDTRVlQmeH6jkXdbBLz1Y6wxUSZoefy1bd';
+        const engineId = 'stable-diffusion-v1-6';
+        
         async function generateImage() {
-            const prompt = promptInput.value.trim();
+            const generateBtn = document.getElementById('generateBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const generatedImage = document.getElementById('generatedImage');
 
-            if (!prompt) {
-                showError('Please enter a prompt');
-                return;
-            }
-
-            loading.style.display = 'block';
-            error.style.display = 'none';
             generateBtn.disabled = true;
+            downloadBtn.style.display = 'none';
+            generatedImage.style.display = 'none';
+            loadingSpinner.classList.add('active');
+
+            const landscapes = [
+                "vibrant hills",
+                "colorful mountains",
+                "bright meadows",
+                "intense streams",
+                "vivid valleys",
+                "dramatic clouds"
+            ];
+
+            const selectedLandscapes = landscapes
+                .sort(() => 0.5 - Math.random())
+                .slice(0, Math.floor(Math.random() * 2) + 2)
+                .join(", ");
+
+            const prompt = `A highly saturated watercolor landscape with ${selectedLandscapes}. 
+                          Intense and vibrant colors: deep electric purple, bright cerulean blue, hot pink.
+                          Strong dotted textures and bold color transitions.
+                          Watercolor technique with high contrast speckles and dots creating texture.
+                          Maximum color saturation while maintaining watercolor feel.
+                          Dramatic and bold composition with intense color layering.
+                          Similar to a pop art watercolor with maximum color intensity.
+                          Hyper-saturated palette with deep shadows and bright highlights.
+                          Style of a modern digital artist using bold watercolor effects.`;
 
             try {
-                const response = await fetch('https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image', {
+                console.log('Initiating API call to Stability AI...');
+                const response = await fetch('https://api.stability.ai/v1/generation/' + engineId + '/text-to-image', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`,
+                        'Accept': 'application/json',
+                        'Authorization': 'Bearer ' + API_KEY,
                     },
                     body: JSON.stringify({
-                        text_prompts: [
-                            {
-                                text: prompt,
-                                weight: 1
-                            }
-                        ],
-                        cfg_scale: 7,
+                        text_prompts: [{
+                            text: prompt,
+                            weight: 1
+                        }],
+                        cfg_scale: 9,  // Aumentato per colori più intensi
                         height: 1024,
                         width: 1024,
                         samples: 1,
-                        steps: 30,
-                    }),
+                        steps: 45,  // Aumentato per migliori dettagli
+                        style_preset: "enhance",
+                        sampler: "K_DPM_2_ANCESTRAL"  // Aggiunto per migliore saturazione
+                    })
                 });
 
+                console.log('Response status:', response.status);
+                const responseText = await response.text();
+                console.log('Response text:', responseText);
+
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    let errorMessage = 'Errore HTTP: ' + response.status;
+                    try {
+                        const errorData = JSON.parse(responseText);
+                        errorMessage += '\nDettagli: ' + (errorData.message || JSON.stringify(errorData));
+                    } catch (e) {
+                        errorMessage += '\nRisposta: ' + responseText;
+                    }
+                    throw new Error(errorMessage);
                 }
 
-                const data = await response.json();
-                
-                // Create image container
-                const imageContainer = document.createElement('div');
-                imageContainer.className = 'image-container';
-                
-                // Create and add the image
-                const img = document.createElement('img');
-                img.src = `data:image/png;base64,${data.artifacts[0].base64}`;
-                imageContainer.appendChild(img);
-                
-                // Add to gallery
-                gallery.insertBefore(imageContainer, gallery.firstChild);
+                const result = JSON.parse(responseText);
+                if (!result.artifacts || !result.artifacts[0]) {
+                    throw new Error('Nessuna immagine generata nella risposta');
+                }
 
-            } catch (err) {
-                showError('Error generating image: ' + err.message);
+                const image = result.artifacts[0];
+                generatedImage.src = 'data:image/png;base64,' + image.base64;
+                generatedImage.style.display = 'block';
+                downloadBtn.style.display = 'block';
+            } catch (error) {
+                console.error('Errore dettagliato:', error);
+                alert('Errore durante la generazione dell\'immagine:\n' + error.message);
             } finally {
-                loading.style.display = 'none';
                 generateBtn.disabled = false;
+                loadingSpinner.classList.remove('active');
             }
         }
 
-        function showError(message) {
-            error.textContent = message;
-            error.style.display = 'block';
+        function downloadImage() {
+            const generatedImage = document.getElementById('generatedImage');
+            if (generatedImage.src) {
+                const link = document.createElement('a');
+                link.download = 'acquerello.png';
+                link.href = generatedImage.src;
+                link.click();
+            } else {
+                alert('Nessuna immagine da scaricare. Genera prima un\'immagine.');
+            }
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Pagina caricata, avvio generazione immagine...');
+            generateImage();
+        });
     </script>
 </body>
 </html>

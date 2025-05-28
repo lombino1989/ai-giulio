@@ -1,3 +1,4 @@
+// Aggiornamento del file main.js per integrare la generazione audio reale
 document.addEventListener('DOMContentLoaded', function() {
     // Toggle advanced options
     const advancedToggle = document.querySelector('.advanced-toggle');
@@ -24,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Form submission (simulate generation)
+    // Form submission (real generation with API)
     const generatorForm = document.querySelector('.generator-form');
     const audioPlayer = document.querySelector('.audio-player');
     
@@ -43,72 +44,123 @@ document.addEventListener('DOMContentLoaded', function() {
             generateBtn.textContent = 'Generazione...';
             generateBtn.disabled = true;
             
-            // Simulate generation delay
-            setTimeout(function() {
-                // Update song info
-                const songTitle = document.querySelector('.song-info h3');
-                const songGenre = document.querySelector('.song-info p');
-                
-                if (songTitle && songGenre) {
-                    songTitle.textContent = promptInput.value.trim();
+            // Get genre if available
+            const genreSelect = document.querySelector('.option-group select');
+            const genre = genreSelect && genreSelect.value ? genreSelect.value : '';
+            
+            // Prepare data for API call
+            const data = {
+                prompt: promptInput.value.trim(),
+                genre: genre
+            };
+            
+            // Call the backend API
+            fetch('http://localhost:5000/api/generate-music', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    // Update song info
+                    const songTitle = document.querySelector('.song-info h3');
+                    const songGenre = document.querySelector('.song-info p');
                     
-                    const genreSelect = document.querySelector('.option-group select');
-                    songGenre.textContent = genreSelect && genreSelect.value 
-                        ? genreSelect.value 
-                        : 'Pop';
+                    if (songTitle && songGenre) {
+                        songTitle.textContent = result.song.title;
+                        songGenre.textContent = result.song.genre;
+                    }
+                    
+                    // Update audio source
+                    const audioElement = document.querySelector('audio');
+                    if (audioElement) {
+                        audioElement.src = result.song.file_path;
+                        audioElement.load();
+                    }
+                    
+                    // Show player
+                    audioPlayer.classList.remove('hidden');
+                    
+                    // Scroll to player
+                    audioPlayer.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert('Errore durante la generazione: ' + (result.error || 'Errore sconosciuto'));
                 }
-                
-                // Show player
-                audioPlayer.classList.remove('hidden');
-                
-                // Scroll to player
-                audioPlayer.scrollIntoView({ behavior: 'smooth' });
-                
+            })
+            .catch(error => {
+                console.error('Errore:', error);
+                alert('Errore durante la generazione. Controlla la console per dettagli.');
+            })
+            .finally(() => {
                 // Reset button
                 generateBtn.textContent = originalBtnText;
                 generateBtn.disabled = false;
-            }, 3000);
+            });
         });
     }
     
-    // Audio player functionality (simulation)
+    // Audio player functionality (real audio)
     const playButton = document.querySelector('.play-button');
+    const audioElement = document.createElement('audio');
+    audioElement.id = 'audio-element';
+    audioElement.style.display = 'none';
+    document.body.appendChild(audioElement);
     
     if (playButton) {
         playButton.addEventListener('click', function() {
             const isPlaying = this.textContent === '❚❚';
-            this.textContent = isPlaying ? '▶' : '❚❚';
             
-            // Simulate time progress when playing
+            if (isPlaying) {
+                // Pause
+                audioElement.pause();
+                this.textContent = '▶';
+            } else {
+                // Play
+                audioElement.play();
+                this.textContent = '❚❚';
+            }
+        });
+    }
+    
+    // Update time slider and display when audio is playing
+    if (audioElement) {
+        audioElement.addEventListener('timeupdate', function() {
             const timeSlider = document.querySelector('.time-slider');
             const currentTime = document.querySelector('.current-time');
             
-            if (timeSlider && currentTime && !isPlaying) {
-                let time = 0;
-                const duration = 180; // 3 minutes in seconds
-                
-                timeSlider.max = duration;
-                
-                const interval = setInterval(function() {
-                    time += 1;
-                    
-                    if (time > duration) {
-                        clearInterval(interval);
-                        playButton.textContent = '▶';
-                        return;
-                    }
-                    
-                    timeSlider.value = time;
-                    currentTime.textContent = formatTime(time);
-                }, 1000);
-                
-                // Store interval ID to clear it when paused
-                playButton.dataset.intervalId = interval;
-            } else if (isPlaying) {
-                // Clear interval when paused
-                clearInterval(playButton.dataset.intervalId);
+            if (timeSlider && currentTime) {
+                timeSlider.value = this.currentTime;
+                currentTime.textContent = formatTime(this.currentTime);
             }
         });
+        
+        audioElement.addEventListener('loadedmetadata', function() {
+            const timeSlider = document.querySelector('.time-slider');
+            const durationDisplay = document.querySelector('.duration');
+            
+            if (timeSlider && durationDisplay) {
+                timeSlider.max = this.duration;
+                durationDisplay.textContent = formatTime(this.duration);
+            }
+        });
+        
+        audioElement.addEventListener('ended', function() {
+            const playButton = document.querySelector('.play-button');
+            if (playButton) {
+                playButton.textContent = '▶';
+            }
+        });
+        
+        // Allow seeking
+        const timeSlider = document.querySelector('.time-slider');
+        if (timeSlider) {
+            timeSlider.addEventListener('input', function() {
+                audioElement.currentTime = this.value;
+            });
+        }
     }
     
     // Format time helper function
@@ -118,10 +170,19 @@ document.addEventListener('DOMContentLoaded', function() {
         return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
     }
     
-    // Initialize time display
-    const durationDisplay = document.querySelector('.duration');
-    if (durationDisplay) {
-        durationDisplay.textContent = '3:00'; // Default duration
+    // Download button functionality
+    const downloadBtn = document.querySelector('.action-btn.download');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', function() {
+            if (audioElement.src) {
+                const a = document.createElement('a');
+                a.href = audioElement.src;
+                a.download = 'ai-music-' + Date.now() + '.wav';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+        });
     }
     
     // Tab functionality for library

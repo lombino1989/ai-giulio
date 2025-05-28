@@ -1,46 +1,344 @@
-
 <!DOCTYPE html>
 <html lang="it">
-  <head>
-    <meta charset="UTF-TF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sistema Q-Traffic AI</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      body {
-        font-family: 'Inter', sans-serif; /* A common modern font, Tailwind will use its defaults if Inter is not available */
-      }
-      /* Custom scrollbar for a more modern look */
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #1e293b; /* slate-800 */
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #38bdf8; /* sky-400 */
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #0ea5e9; /* sky-500 */
-      }
-    </style>
-
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://esm.sh/react@^19.1.0/",
-    "react": "https://esm.sh/react@^19.1.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
-    "recharts": "https://esm.sh/recharts@^2.15.3",
-    "@google/genai": "https://esm.sh/@google/genai@^1.0.1"
-  }
-}
-</script>
-  <script type="module" crossorigin src="/assets/index-Cuh1Q-BE.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Music Generator</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
-  <body class="bg-slate-900 text-slate-100">
-    <div id="root"></div>
-  </body>
+<body>
+    <header class="app-header">
+        <div class="logo-container">
+            <h1>AI Music Generator</h1>
+        </div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="#" class="active">Home</a></li>
+                <li><a href="#studio">Studio</a></li>
+                <li><a href="#library">Libreria</a></li>
+                <li><a href="#community">Community</a></li>
+            </ul>
+        </nav>
+        <div class="user-controls">
+            <button class="btn-secondary">Accedi</button>
+            <button class="btn-primary">Registrati</button>
+        </div>
+    </header>
+
+    <main class="app-main">
+        <section class="hero-section">
+            <div class="hero-content">
+                <h2>Crea musica con l'intelligenza artificiale</h2>
+                <p>Genera canzoni complete con voce cantata e musica in tutti gli stili, partendo da semplici descrizioni testuali.</p>
+                <button class="btn-primary btn-large">Inizia a creare</button>
+            </div>
+            <div class="hero-image">
+                <img src="assets/hero-image.jpg" alt="AI Music Generator">
+            </div>
+        </section>
+
+        <section class="music-generator" id="generator">
+            <div class="generator-header">
+                <h2>Crea la tua canzone</h2>
+                <p>Inserisci un prompt e genera una canzone unica con voce cantata e musica</p>
+            </div>
+            
+            <form class="generator-form">
+                <div class="prompt-container">
+                    <input
+                        type="text"
+                        placeholder="Descrivi la canzone che vuoi creare..."
+                        class="prompt-input"
+                    />
+                    <button type="submit" class="generate-btn">
+                        Genera
+                    </button>
+                </div>
+                
+                <div class="example-prompts">
+                    <p>Esempi:</p>
+                    <div class="examples-list">
+                        <button type="button" class="example-btn">
+                            Una canzone pop energica sul superare le difficoltà
+                        </button>
+                        <button type="button" class="example-btn">
+                            Un brano country rilassante sulla vita in campagna
+                        </button>
+                        <button type="button" class="example-btn">
+                            Una ballata rock emotiva sulla fine di una relazione
+                        </button>
+                        <button type="button" class="example-btn">
+                            Un pezzo elettronico dance con ritmo incalzante
+                        </button>
+                    </div>
+                </div>
+                
+                <button type="button" class="advanced-toggle">
+                    Modalità avanzata
+                </button>
+                
+                <div class="advanced-options hidden">
+                    <div class="option-group">
+                        <label>Genere musicale:</label>
+                        <select>
+                            <option value="">Seleziona un genere</option>
+                            <option value="Pop">Pop</option>
+                            <option value="Rock">Rock</option>
+                            <option value="Hip Hop">Hip Hop</option>
+                            <option value="Electronic">Electronic</option>
+                            <option value="Jazz">Jazz</option>
+                            <option value="Classical">Classical</option>
+                            <option value="Country">Country</option>
+                            <option value="R&B">R&B</option>
+                            <option value="Folk">Folk</option>
+                            <option value="Metal">Metal</option>
+                        </select>
+                    </div>
+                    
+                    <div class="option-group">
+                        <label>Testo personalizzato:</label>
+                        <textarea
+                            placeholder="Inserisci il testo che vuoi per la tua canzone..."
+                            rows="4"
+                        ></textarea>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <section class="audio-player hidden" id="player">
+            <div class="song-info">
+                <h3>Titolo della canzone</h3>
+                <p>Genere</p>
+            </div>
+            
+            <div class="player-controls">
+                <button class="play-button">
+                    ▶
+                </button>
+                
+                <div class="time-controls">
+                    <span class="current-time">0:00</span>
+                    <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value="0"
+                        class="time-slider"
+                    />
+                    <span class="duration">0:00</span>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="action-btn download">Scarica</button>
+                <button class="action-btn share">Condividi</button>
+                <button class="action-btn stems">Estrai Stems</button>
+            </div>
+        </section>
+
+        <section class="features-section">
+            <h2>Funzionalità principali</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-music"></i>
+                    </div>
+                    <h3>Generazione musicale</h3>
+                    <p>Crea canzoni complete in qualsiasi genere musicale partendo da semplici descrizioni testuali.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-microphone"></i>
+                    </div>
+                    <h3>Voce cantata</h3>
+                    <p>Genera voci cantate realistiche in diversi stili, con testi coerenti al prompt fornito.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-sliders-h"></i>
+                    </div>
+                    <h3>Estrazione stems</h3>
+                    <p>Separa voce, strumenti, batteria e basso dalle tue canzoni per remix e modifiche avanzate.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-random"></i>
+                    </div>
+                    <h3>Creazione cover</h3>
+                    <p>Trasforma le tue canzoni in nuovi stili musicali mantenendo la melodia e il testo originali.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="studio-section" id="studio">
+            <h2>Studio avanzato</h2>
+            <p>Strumenti professionali per la creazione e modifica delle tue canzoni</p>
+            
+            <div class="studio-preview">
+                <img src="assets/studio-preview.jpg" alt="Studio avanzato">
+                <div class="studio-features">
+                    <ul>
+                        <li><i class="fas fa-check"></i> Controllo completo su tutti i parametri</li>
+                        <li><i class="fas fa-check"></i> Editor audio integrato</li>
+                        <li><i class="fas fa-check"></i> Creazione di personas vocali</li>
+                        <li><i class="fas fa-check"></i> Remastering professionale</li>
+                        <li><i class="fas fa-check"></i> Esportazione in alta qualità</li>
+                    </ul>
+                    <button class="btn-primary">Accedi allo Studio</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="library-section" id="library">
+            <h2>La tua libreria musicale</h2>
+            <p>Organizza e gestisci tutte le tue creazioni</p>
+            
+            <div class="library-preview">
+                <div class="library-tabs">
+                    <button class="tab-btn active">Canzoni</button>
+                    <button class="tab-btn">Playlist</button>
+                    <button class="tab-btn">Personas</button>
+                </div>
+                
+                <div class="songs-list">
+                    <div class="song-item">
+                        <span class="song-title">Una canzone pop energica</span>
+                        <span class="song-genre">Pop</span>
+                        <span class="song-date">28/05/2025</span>
+                        <div class="song-actions">
+                            <button class="action-btn play">▶</button>
+                            <button class="action-btn edit">✏️</button>
+                            <button class="action-btn delete">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="song-item">
+                        <span class="song-title">Ballata rock emotiva</span>
+                        <span class="song-genre">Rock</span>
+                        <span class="song-date">27/05/2025</span>
+                        <div class="song-actions">
+                            <button class="action-btn play">▶</button>
+                            <button class="action-btn edit">✏️</button>
+                            <button class="action-btn delete">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="song-item">
+                        <span class="song-title">Brano elettronico dance</span>
+                        <span class="song-genre">Electronic</span>
+                        <span class="song-date">26/05/2025</span>
+                        <div class="song-actions">
+                            <button class="action-btn play">▶</button>
+                            <button class="action-btn edit">✏️</button>
+                            <button class="action-btn delete">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="community-section" id="community">
+            <h2>Community</h2>
+            <p>Condividi le tue creazioni e scopri quelle degli altri utenti</p>
+            
+            <div class="community-grid">
+                <div class="community-card">
+                    <div class="community-song">
+                        <h4>Summer Vibes</h4>
+                        <p>by @musiclover</p>
+                        <button class="play-btn">▶</button>
+                    </div>
+                    <div class="community-actions">
+                        <button><i class="fas fa-heart"></i> 42</button>
+                        <button><i class="fas fa-comment"></i> 12</button>
+                        <button><i class="fas fa-share"></i></button>
+                    </div>
+                </div>
+                <div class="community-card">
+                    <div class="community-song">
+                        <h4>Midnight Dreams</h4>
+                        <p>by @nightowl</p>
+                        <button class="play-btn">▶</button>
+                    </div>
+                    <div class="community-actions">
+                        <button><i class="fas fa-heart"></i> 78</button>
+                        <button><i class="fas fa-comment"></i> 23</button>
+                        <button><i class="fas fa-share"></i></button>
+                    </div>
+                </div>
+                <div class="community-card">
+                    <div class="community-song">
+                        <h4>Urban Rhythm</h4>
+                        <p>by @beatmaker</p>
+                        <button class="play-btn">▶</button>
+                    </div>
+                    <div class="community-actions">
+                        <button><i class="fas fa-heart"></i> 56</button>
+                        <button><i class="fas fa-comment"></i> 18</button>
+                        <button><i class="fas fa-share"></i></button>
+                    </div>
+                </div>
+                <div class="community-card">
+                    <div class="community-song">
+                        <h4>Acoustic Journey</h4>
+                        <p>by @guitarmaster</p>
+                        <button class="play-btn">▶</button>
+                    </div>
+                    <div class="community-actions">
+                        <button><i class="fas fa-heart"></i> 34</button>
+                        <button><i class="fas fa-comment"></i> 9</button>
+                        <button><i class="fas fa-share"></i></button>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="btn-primary">Esplora la community</button>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>AI Music Generator</h3>
+                <p>Crea canzoni uniche con voce cantata e musica utilizzando l'intelligenza artificiale</p>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Link Utili</h4>
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#studio">Studio</a></li>
+                    <li><a href="#library">Libreria</a></li>
+                    <li><a href="#community">Community</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Risorse</h4>
+                <ul>
+                    <li><a href="#">Guida</a></li>
+                    <li><a href="#">FAQ</a></li>
+                    <li><a href="#">Supporto</a></li>
+                    <li><a href="#">Blog</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Contatti</h4>
+                <ul>
+                    <li><a href="#">Email</a></li>
+                    <li><a href="#">Twitter</a></li>
+                    <li><a href="#">Instagram</a></li>
+                    <li><a href="#">Facebook</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2025 AI Music Generator. Tutti i diritti riservati.</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
 </html>
-<link rel="stylesheet" href="index.css">
